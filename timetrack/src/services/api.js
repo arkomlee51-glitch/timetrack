@@ -5,7 +5,7 @@
 // ============================================================
 
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbzB3LPmjRFgNZ_LSSL40h-LuKndVKWnrv3Z3sJmLm1L1ipsv0EhkdQ7Lv2xAWUdBHQK/exec'
+  'https://script.google.com/macros/s/AKfycbwe9SPRoGlyinPaakfnvQLYTvIcsUdawVQk3TKX9i9cGPo2YQIIObQ9XFm5pfj1kTrJ/exec'
 
 // ── ฟังก์ชันหลักสำหรับส่งคำขอไปยัง API ──────────────────────
 // Apps Script ต้องการ POST พร้อม action บอกว่าต้องการทำอะไร
