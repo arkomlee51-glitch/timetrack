@@ -86,12 +86,9 @@
 import AppLayout from '../components/AppLayout.vue'
 import { useAttendanceStore } from '../stores/attendance'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { GPS_CONFIG } from '../config.js'
 
-// ─── พิกัดออฟฟิศ (แก้ค่าตามตำแหน่งจริง) ───────────────────────
-const OFFICE_LAT    = 13.7563   // ละติจูดออฟฟิศ
-const OFFICE_LNG    = 100.5018  // ลองจิจูดออฟฟิศ
-const MAX_DISTANCE  = 100       // รัศมีสูงสุด (เมตร)
-// ────────────────────────────────────────────────────────────────
+const { OFFICE_LAT, OFFICE_LNG, MAX_DISTANCE } = GPS_CONFIG
 
 const att = useAttendanceStore()
 
