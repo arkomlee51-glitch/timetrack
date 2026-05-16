@@ -60,11 +60,11 @@
           {{ auth.loginLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
         </button>
 
-        <!-- Demo hint -->
-        <div class="demo-box">
-          <div class="demo-title">บัญชีทดสอบ</div>
-          <div class="demo-row"><span>ชื่อผู้ใช้:</span><span>{{ tab === 'admin' ? 'สมชาย ใจดี' : 'สุภาพร วงศ์ดี' }}</span></div>
-          <div class="demo-row"><span>รหัสผ่าน:</span><span>{{ tab === 'admin' ? 'admin123' : 'emp123' }}</span></div>
+        <!-- Demo hint — แสดงเฉพาะตอน dev mode -->
+        <div v-if="isDev" class="demo-box">
+          <div class="demo-title">บัญชีทดสอบ (Development only)</div>
+          <div class="demo-row"><span>ชื่อผู้ใช้:</span><span>{{ tab === 'admin' ? demoAdmin.user : demoEmp.user }}</span></div>
+          <div class="demo-row"><span>รหัสผ่าน:</span><span>{{ tab === 'admin' ? demoAdmin.pass : demoEmp.pass }}</span></div>
           <button class="btn sm primary" style="margin-top:10px;width:100%;justify-content:center" @click="fillDemo">
             <i class="ti ti-wand" /> กรอกอัตโนมัติ
           </button>
@@ -87,13 +87,19 @@ const username = ref('')
 const password = ref('')
 const showPass = ref(false)
 
+// บัญชีทดสอบ — โหลดจาก env เท่านั้น ไม่ hardcode ในโค้ด
+const isDev    = import.meta.env.DEV
+const demoAdmin = { user: import.meta.env.VITE_DEMO_ADMIN_USER ?? '', pass: import.meta.env.VITE_DEMO_ADMIN_PASS ?? '' }
+const demoEmp   = { user: import.meta.env.VITE_DEMO_EMP_USER   ?? '', pass: import.meta.env.VITE_DEMO_EMP_PASS  ?? '' }
+
 async function doLogin() {
   const ok = await auth.login(username.value, password.value, tab.value)
   if (ok) router.push('/dashboard')
 }
 function fillDemo() {
-  username.value = tab.value === 'admin' ? 'สมชาย ใจดี' : 'สุภาพร วงศ์ดี'
-  password.value = tab.value === 'admin' ? 'admin123'    : 'emp123'
+  const demo = tab.value === 'admin' ? demoAdmin : demoEmp
+  username.value = demo.user
+  password.value = demo.pass
 }
 </script>
 
