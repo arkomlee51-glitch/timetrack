@@ -43,8 +43,14 @@ export function apiClockOut(emp_id) {
   return call('clockOut', { emp_id })
 }
 
-export function apiGetAttendance(emp_id, month) {
-  return call('getAttendance', { emp_id, month })
+/** ดึงประวัติเข้า-ออกงาน รองรับ pagination
+ *  @param {string} emp_id
+ *  @param {string} month   - 'YYYY-MM'
+ *  @param {number} page    - หน้าที่ต้องการ (เริ่มที่ 1)
+ *  @param {number} pageSize - จำนวนรายการต่อหน้า
+ */
+export function apiGetAttendance(emp_id, month, page = 1, pageSize = 10) {
+  return call('getAttendance', { emp_id, month, page, pageSize })
 }
 
 // ============================================================
