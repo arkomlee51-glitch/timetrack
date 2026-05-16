@@ -61,22 +61,66 @@
 
     <div class="card">
       <div class="card-header">
-        <span class="card-title">ประวัติเดือนนี้</span>
-        <button class="btn sm" @click="att.fetchRecords()"><i class="ti ti-refresh" /> รีเฟรช</button>
+        <span class="card-title">ประวัติการลงเวลา</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="month" v-model="selectedMonth" class="form-input"
+            style="width:150px" :max="maxMonth"
+            @change="att.fetchRecords(1, selectedMonth)" />
+          <span v-if="att.totalCount" class="page-info">
+            ทั้งหมด {{ att.totalCount }} รายการ
+          </span>
+          <button class="btn sm" @click="att.fetchRecords(1, selectedMonth)" :disabled="att.loading">
+            <i class="ti ti-refresh" /> รีเฟรช
+          </button>
+        </div>
       </div>
+
       <div v-if="att.loading" class="loading-msg"><i class="ti ti-loader-2" /> กำลังโหลด...</div>
-      <div class="table-wrap" v-else>
-        <table>
-          <thead><tr><th>วันที่</th><th>เข้างาน</th><th>ออกงาน</th><th>รวม</th><th>OT</th><th>สถานะ</th></tr></thead>
-          <tbody>
-            <tr v-if="!att.records.length"><td colspan="6" class="empty-msg">ไม่มีข้อมูล</td></tr>
-            <tr v-for="r in att.records" :key="r.date">
-              <td>{{ r.date }}</td><td>{{ r.clockIn }}</td><td>{{ r.clockOut }}</td>
-              <td>{{ r.total }}</td><td>{{ r.ot }}</td>
-              <td><span class="badge" :class="r.status">{{ r.statusText }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>วันที่</th><th>เข้างาน</th><th>ออกงาน</th><th>รวม</th><th>OT</th><th>สถานะ</th></tr>
+            </thead>
+            <tbody>
+              <tr v-if="!att.records.length">
+                <td colspan="6" class="empty-msg">ไม่มีข้อมูล</td>
+              </tr>
+              <tr v-for="r in att.records" :key="r.date">
+                <td>{{ r.date }}</td>
+                <td>{{ r.clockIn }}</td>
+                <td>{{ r.clockOut }}</td>
+                <td>{{ r.total }}</td>
+                <td>{{ r.ot }}</td>
+                <td><span class="badge" :class="r.status">{{ r.statusText }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" v-if="att.totalPages > 1">
+          <button class="btn sm" :disabled="att.currentPage === 1"
+            @click="att.fetchRecords(att.currentPage - 1, selectedMonth)">
+            <i class="ti ti-chevron-left" />
+          </button>
+
+          <button
+            v-for="p in pageNumbers" :key="p"
+            class="btn sm" :class="{ primary: p === att.currentPage }"
+            @click="att.fetchRecords(p, selectedMonth)">
+            {{ p }}
+          </button>
+
+          <button class="btn sm" :disabled="att.currentPage === att.totalPages"
+            @click="att.fetchRecords(att.currentPage + 1, selectedMonth)">
+            <i class="ti ti-chevron-right" />
+          </button>
+
+          <span class="page-label">
+            หน้า {{ att.currentPage }} / {{ att.totalPages }}
+          </span>
+        </div>
       </div>
     </div>
   </AppLayout>
@@ -92,15 +136,28 @@ const { OFFICE_LAT, OFFICE_LNG, MAX_DISTANCE } = GPS_CONFIG
 
 const att = useAttendanceStore()
 
-onMounted(() => {
-  att.fetchRecords()
-  checkLocation()
+// ── เดือนที่เลือก ─────────────────────────────────────────────
+const selectedMonth = ref(new Date().toISOString().slice(0, 7))  // 'YYYY-MM'
+const maxMonth      = new Date().toISOString().slice(0, 7)
+
+// คำนวณหมายเลขหน้าที่จะแสดง (สูงสุด 5 หน้า)
+const pageNumbers = computed(() => {
+  const total = att.totalPages
+  const cur   = att.currentPage
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = new Set([1, total, cur, cur - 1, cur + 1].filter(p => p >= 1 && p <= total))
+  return [...pages].sort((a, b) => a - b)
 })
 
 // ── นาฬิกา ──────────────────────────────────────────────────────
 const now = ref(new Date())
 let timer
-onMounted(() => { timer = setInterval(() => (now.value = new Date()), 1000) })
+
+onMounted(() => {
+  att.fetchRecords(1, selectedMonth.value)
+  checkLocation()
+  timer = setInterval(() => (now.value = new Date()), 1000)
+})
 onUnmounted(() => clearInterval(timer))
 const timeStr = computed(() => now.value.toLocaleTimeString('th-TH'))
 const dateStr = computed(() => now.value.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' }))
@@ -205,5 +262,8 @@ async function handleClockOut() { await att.clockOutAction() }
 .sum-row:last-child{border-bottom:none;}
 .sum-label{color:var(--text-muted);}
 .loading-msg,.empty-msg{text-align:center;padding:24px;color:var(--text-hint);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.page-info{font-size:12px;color:var(--text-hint);}
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 4px 4px;flex-wrap:wrap;}
+.page-label{font-size:12px;color:var(--text-hint);margin-left:4px;}
 @media(max-width:700px){.clock-big{font-size:38px;}.clock-actions{flex-direction:column;gap:8px;}.btn-ci,.btn-co{width:100%;justify-content:center;}}
 </style>
